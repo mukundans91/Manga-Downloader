@@ -1,0 +1,29 @@
+About :
+-------
+	This is a simple script written to download manga from a specified site.
+	The site used in this script is http://manga.animea.net .
+	All the manga in this site can be downloaded using this script.
+	This is a script which uses BeautifulSoup module of Python for HTML Parsing and the in built linux system call wget for downloading the images.
+
+Installation:
+-------------
+	It requires no installation copy the file into one directory and run the script from that directory.
+	
+Usage:
+------
+	Run the script from a directory where you want to download the manga.
+	use as:
+		manga [-c N] <Chaptet list page>
+		eg:
+			manga [-c N] http://manga.animea.net/dragon-ball.html
+		Here the -c option is the download the manga chapter wise .
+			Here N can be the chapter number or in some cases the Chapter name as in 'Volume 1 Extra'.
+		Go to manga.animea.net and get the link to the chapters list page of ur favorite manga and run the script with that url.
+
+Future:
+-------
+	This is only version 0.1.
+	Furthur versions will be released soon.
+	This version is very slow since it is dependant on downloading the web page and then parsing out the image source and then downloading it.
+	Better versions can be developed.
+	Progress can be shown.

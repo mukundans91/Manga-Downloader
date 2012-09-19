@@ -1,0 +1,128 @@
+#!/usr/bin/python
+from urllib2 import *
+import urllib
+from BeautifulSoup import *
+import os
+
+class mangadl():
+	def __init__(self,seed,chapter):
+		pass
+		
+		
+	def parser(self,pfolder=".",chapter=""):
+		self.next='1'
+		for unused in self.pages:
+			dl=self.urlbase+self.chapter+self.page+self.next+self.ext #find the download page
+			print 'Page : ',self.next
+			print
+			print 'Download Link : ',dl
+			dl=urlopen(dl).read()
+			self.contents=dl
+			if chapter=="":
+				cfolder=pfolder+'/chapter-'+str(self.chapter[self.chapter.find('-')+1:].split('-')[1])+'/'
+			else:
+				cfolder=pfolder+"/"+self.chapter[1:-1]+'/'
+			self.dlmanga(cfolder)
+	
+	def dlmanga(self,cfolder):
+		soup=BeautifulSoup(self.contents)
+		img=soup.findAll('img',{'class':'mangaimg'})[0]
+		print
+		print 'Retrieving file : ',img['src']
+		filename=cfolder+str(self.next)
+		print
+		print 'Saving to '+filename
+		os.system('wget -q -nc -c -O "'+filename+'" '+img['src'])
+		self.next=str(int(self.next)+1)
+
+
+class mangachapterwise(mangadl):
+	def __init__(self,seed,chapter):
+		self.url=seed.split('.ht')[0]
+		self.urlbase=seed.split('.ht')[0]
+		self.chapter='-chapter-'+str(chapter)+'-'
+		self.page='page-'
+		self.next='1'
+		self.ext='.html'
+		os.system('mkdir -p "chapter-'+str(chapter)+'"')
+		dl=self.url+self.chapter+self.page+self.next+self.ext #find the download page
+		print 'Download Link : ',dl
+		print
+		dl=urlopen(dl).read()
+		self.contents=dl
+		soup=BeautifulSoup(self.contents)
+		select=soup.findAll("select",{'name':'page'})[0]
+		option=select.findAll("option")
+		self.pages=[]
+		for i in option:
+			self.pages.append(i['value'])
+		self.parser()
+
+
+class manga(mangadl):
+	def __init__(self,seed,chapter):
+		self.url=seed
+		self.chapter='-chapter-'+str(chapter)+'-'
+		self.page='page-'
+		self.next='1'
+		self.ext='.html'
+		self.folder='Manga '+seed.split('/')[-1].split('.ht')[0]
+		os.system('mkdir -p "Manga '+seed.split('/')[-1].split('.ht')[0]+'"')
+		dl=self.url
+		print 'Download Link : ',dl
+		dl=urllib.urlopen(dl).read()
+		self.contents=dl
+		self.findChapters()
+		#print self.chapters
+		self.downloadChapters()
+	
+	def findChapters(self):
+		soup=BeautifulSoup(self.contents)
+		#print soup.prettify()
+		ul=soup.findAll("ul",{'class':'chapters_list'})[0]
+		li=ul.findAll("li")
+		li=li[1:]
+		legend=ul.findAll("li",{"class":"legend"})[0]
+		assert legend not in li
+		print 'Total Number of Chapters : ',len(li)
+		print
+		self.chapters=[]
+		for i in li:
+			a=i.findAll('a')[0]
+			t=a['href'][a['href'].find('-chapt'):]
+			self.chapters.append(t[:t.find('.ht')]+'-')
+	
+	def downloadChapters(self):
+		for chap in self.chapters:
+			self.chapter=chap
+			self.next='1'
+			print 'Retrieving ',self.chapter[1:-1]
+			print
+			os.system('mkdir -p "./'+self.folder+'/'+str(self.chapter[1:-1])+'"')
+			self.urlbase=self.url.split('.ht')[0]
+			dl=self.urlbase+self.chapter+self.page+self.next+self.ext #find the download page
+			dl=urllib.urlopen(dl).read()
+			self.contents=dl
+			soup=BeautifulSoup(self.contents)
+			select=soup.findAll("select",{'name':'page'})[0]
+			option=select.findAll("option")
+			self.pages=[]
+			for i in option:
+				self.pages.append(i['value'])
+			self.parser('./'+self.folder,"1")
+
+if __name__=='__main__':
+	import sys
+	if len(sys.argv) < 2:
+		print "Use the file as manga <URL of Chapters List>"
+		print "Use Option -c for specifying chapter number or the name"
+		print "The files will be downloaded in the folder that contains the script"
+	elif len(sys.argv) == 2:
+		m=manga(sys.argv[1],1)
+	else:
+		if sys.argv[1]=='-c':
+			m=mangachapterwise(sys.argv[3],sys.argv[2])
+		elif sys.argv[2]=='-c':
+			m=mangachapterwise(sys.argv[1],sys.argv[3])
+#	seed='http://manga.animea.net/dragon-ball.html'
+#	seed='http://manga.animea.net/pokemon-adventures.html'
